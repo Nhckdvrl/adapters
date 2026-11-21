@@ -42,6 +42,8 @@ timeout_sec = {agent_timeout_sec}
 [verifier]
 timeout_sec = 300.0
 environment_mode = "separate"
+# Scoring is pure Python stdlib over files baked into the verifier image.
+network_mode = "no-network"
 
 [environment]
 build_timeout_sec = {build_timeout_sec}

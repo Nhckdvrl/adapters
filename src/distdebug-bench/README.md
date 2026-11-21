@@ -50,8 +50,9 @@ a leakage checker, and 6,120 scored agent traces.
   (`distdebug_bench/*.py`, verified against pinned SHA-256 hashes at generation time) and only this bug's
   `report.json`/`blocks.json`. `tests/score_diagnosis.py` calls upstream `distdebug_bench.score.score_run`,
   the function behind `python -m distdebug_bench.score`. The verifier runs in a **separate container**
-  (`[verifier] environment_mode = "separate"`). Only `/workspace/diagnosis.json` is passed to it
-  (`artifacts`), so labels, fix links and the scorer never enter the agent's image.
+  (`[verifier] environment_mode = "separate"`) with no network (`network_mode = "no-network"`; scoring is
+  pure stdlib). Only `/workspace/diagnosis.json` is passed to it (`artifacts`), so labels, fix links and
+  the scorer never enter the agent's image.
 - **Multi-metric reward.** `reward.json` contains `reward` (= `block_coverage`), `valid_diagnosis`, and
   `block_coverage`, `strict_block_coverage`, `block_precision`, `file_coverage`, `file_precision`,
   `function_coverage`, `function_precision`, `line_coverage`, `line_precision`, `mention_coverage`.
@@ -77,7 +78,7 @@ a leakage checker, and 6,120 scored agent traces.
 ```
 distdebug-bench/
 ├── zookeeper-2845/
-│   ├── task.toml                  # name, authors, metadata, allowlist, separate verifier, artifacts
+│   ├── task.toml                  # name, authors, metadata, allowlist, separate offline verifier, artifacts
 │   ├── instruction.md             # upstream CLI-harness prompt (issue + output schema + workflow)
 │   ├── environment/               # agent image
 │   │   ├── Dockerfile             # ubuntu:24.04 + git/python3/ripgrep; pruned snapshot at /workspace
