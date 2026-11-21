@@ -191,11 +191,22 @@ images are built, not at generation time.
 
 ## Comparison with Original Benchmark (Parity)
 
-**Status: in progress.** The parity plan below is pending agreement with the Harbor team.
+**Status: in progress** (WIP). Runs completed so far: original 2 of 3, Harbor 1 of 3. Values are
+`block_coverage` / `file_coverage` in %, mean over the 12 parity bugs.
 
 | Agent | Model | Metric | Number of Runs | Dataset Size | Original Benchmark Performance | Harbor Adapter Performance |
 |-------|-------|--------|----------------|--------------|--------------------------------|----------------------------|
-| mini-swe-agent@2.2.8 | step-5-preview | block_coverage | TBD | 12 of 34 (35%) | TBD | TBD |
+| mini-swe-agent@2.2.8 | step-5-preview | block_coverage | 2 / 1 (of 3) | 12 of 34 (35%) | 57.64 ± 8.33 (runs 49.31, 65.97) | 53.75 (1 run so far) |
+| mini-swe-agent@2.2.8 | step-5-preview | file_coverage | 2 / 1 (of 3) | 12 of 34 (35%) | 74.31 ± 6.25 (runs 68.06, 80.56) | 76.39 (1 run so far) |
+
+What has already been verified on real runs:
+- On 12 of 12 Harbor trials, the in-container `reward.json` equals upstream's offline rescoring of the
+  same diagnosis (`scripts/harbor_job_to_distdebug.py` → `python -m distdebug_bench.score`).
+- Upstream `distdebug_bench.leakage` flags 0 of 12 traces on either side.
+- No missing or schema-invalid diagnoses on either side.
+- The system and instance messages in the saved trajectories are byte-identical between the two sides,
+  except Mini-SWE-Agent's `<system_information>` line. That line is `uname` output: an x86_64 Linux host
+  for the original side and an aarch64 Linux VM for the Harbor side.
 
 **Proposed plan.**
 - **Agent:** Mini-SWE-Agent 2.2.8, the harness behind the paper's main table. Harbor has a built-in
@@ -271,6 +282,14 @@ python src/distdebug-bench/scripts/parity_compare.py --upstream /path/to/distdeb
     (`scripts/harbor_job_to_distdebug.py`; Mini-SWE-Agent traces are supported directly). Some issue
     descriptions mention *other* issue keys (for example ZOOKEEPER-2678 in zookeeper-2845). That is
     upstream content and is unchanged.
+- **How the Harbor-side parity runs were executed.** They ran on macOS (Apple silicon) with Docker via
+  Colima, one task at a time. On that network, three local settings were needed. None of them changes the
+  task, the prompt or the scorer:
+  - Harbor's `--ae UV_DEFAULT_INDEX=<PyPI mirror>`, so that the agent installs from a PyPI mirror. It
+    resolves the same package versions; for example, litellm is 1.110.2 on both sides.
+  - An `--extra-docker-compose` overlay that pins `api.stepfun.com` in `/etc/hosts`. Colima's Docker
+    embedded DNS cannot reach its upstream resolver once Harbor's allowlist is active.
+  - A build-time-only proxy for GitHub.
 - **Module-relative label paths.** Some HDFS and Ignite/Ignite 3 labels omit the leading module
   directory (e.g. `hadoop-hdfs/src/...` for `hadoop-hdfs-project/hadoop-hdfs/src/...`). Upstream's
   scorer matches a path that contains the other, so repository-relative answers still match. We checked
