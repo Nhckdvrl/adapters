@@ -305,8 +305,18 @@ python src/distdebug-bench/scripts/parity_compare.py --upstream /path/to/distdeb
 
 ## Troubleshooting
 
-- **`snapshot ... fetch failed`** during the build: GitHub rate limiting or a flaky network. The script
-  retries 3 times. Rebuild the failed task.
+- **`snapshot ... fetch failed`** during the build: GitHub rate limiting or a flaky network. The fetch
+  aborts if it stalls below 1 KB/s for 60 s and is retried 3 times. Rebuild the failed task. If your
+  machine reaches GitHub through a proxy, give the Docker builds that proxy, for example via `proxies`
+  in `~/.docker/config.json`. Do not leave that proxy set for the trial containers. The agent phase
+  runs behind Harbor's egress control (allowlist), and proxy variables injected into the containers
+  make agent setup fail (`apt-get` gets `502 Bad Gateway` from the proxy). Build the images first
+  (e.g. an oracle pass with `--no-delete`), remove the proxy, then run agents. Without
+  `--force-build`, Harbor reuses the built images.
+- **Disk space on small machines:** each task image keeps its snapshot (up to about 1.6 GB for
+  Elasticsearch and Kubernetes), plus the BuildKit cache. With little free disk, run with `-n 1` and
+  prune between tasks (`docker builder prune`). For Colima or Docker Desktop, also cap the VM disk size,
+  because a VM disk that outgrows the host's free space turns the VM filesystem read-only.
 - **Agent cannot reach its model:** the endpoint host is not in `allowed_hosts`. Add it via
   `extra_allowed_hosts` or regenerate with `--allowed-hosts`.
 - **`allowlist` not supported by the environment:** regenerate with `--agent-network public` (see
