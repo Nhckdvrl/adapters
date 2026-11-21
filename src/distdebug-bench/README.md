@@ -141,8 +141,13 @@ harbor run -p datasets/distdebug-bench -a codex -m "openai/gpt-5-mini"
 
 # Mini-SWE-Agent with the exact upstream prompt
 harbor run -p datasets/distdebug-bench -a mini-swe-agent -m "<model>" \
-  --ak version=2.2.8 --ak config_file=src/distdebug-bench/configs/harbor_mini_swe_agent.yaml
+  --ak version=2.2.8 --ak config_file=src/distdebug-bench/configs/harbor_mini_swe_agent.yaml \
+  --ak 'session_id_headers=[]'
 ```
+
+Keep `session_id_headers=[]` for `mini-swe-agent`: without it the trial name, which contains the bug id,
+ends up in an agent-readable log (see Notes & Caveats). For any agent, run the upstream leakage check on
+the converted traces.
 
 If your model endpoint is not in the default allowlist, add it for the run (`extra_allowed_hosts` in the
 agent section of a job config) or regenerate with `--allowed-hosts`.
@@ -227,7 +232,8 @@ What has already been verified on real runs:
 - **Settings held identical:** prompt (byte-identical, checked), `step_limit: 0`, `cost_limit: 3.0`
   (inactive: StepFun prices are unknown to LiteLLM, so `MSWEA_COST_TRACKING=ignore_errors`, as in the
   paper's MiMo/Hunyuan configs), 60 s command timeout, `drop_params: true`. Harbor's wall-clock limit is
-  set to 2 h (`override_timeout_sec`) because the upstream runner has none.
+  set to 2 h (`override_timeout_sec`) because the upstream runner has none. The Harbor side passes
+  `session_id_headers: []` so that the bug id is not exposed to the agent (see Notes & Caveats).
 
 **Reproduction.**
 
@@ -250,7 +256,7 @@ Harbor side:
 cd src/distdebug-bench && uv run distdebug-bench --split parity --output-dir ../../datasets/distdebug-bench-parity && cd ../..
 export STEPFUN_API_KEY=<Step Plan key>
 for i in 1 2 3; do harbor run -c src/distdebug-bench/run_distdebug-bench_parity.yaml --job-name distdebug-parity-$i; done
-for i in 1 2 3; do python src/distdebug-bench/scripts/harbor_job_to_distdebug.py jobs/distdebug-parity-$i results/parity-harbor-$i; done
+for i in 1 2 3; do python src/distdebug-bench/scripts/harbor_job_to_distdebug.py jobs/distdebug-parity-$i results/parity-harbor-$i --redact-env STEPFUN_API_KEY; done
 ```
 
 Compare:
@@ -282,6 +288,18 @@ python src/distdebug-bench/scripts/parity_compare.py --upstream /path/to/distdeb
     (`scripts/harbor_job_to_distdebug.py`; Mini-SWE-Agent traces are supported directly). Some issue
     descriptions mention *other* issue keys (for example ZOOKEEPER-2678 in zookeeper-2845). That is
     upstream content and is unchanged.
+  - *Agent-side session header (set `session_id_headers: []`).* By default Harbor's `mini-swe-agent`
+    adds `-c model.model_kwargs.extra_headers.X-Session-ID=<trial name>` to its command line. The trial
+    name starts with the bug id, and mini-swe-agent echoes its command-line specs into
+    `/logs/agent/mini-swe-agent.txt`, which the agent can read from inside its own container. In one
+    parity trial (Harbor run 2, elasticsearch-128583) the agent did exactly that and saw `128583`; the
+    leakage check flagged it. `run_distdebug-bench_parity.yaml` therefore passes
+    `session_id_headers: []`. With it, the bug id appears neither in that log, the process list, the
+    environment nor the hostname (checked inside a running trial). The flagged trial was excluded and
+    rerun with the fix. Use the same kwarg for any Harbor run of this benchmark with `mini-swe-agent`.
+  - *API key in traces.* The same log line also contains the model API key. It is not task data, but an
+    agent that reads the log copies it into its trajectory. Pass `--redact-env <KEY_VAR>` to
+    `scripts/harbor_job_to_distdebug.py` before sharing converted traces.
 - **How the Harbor-side parity runs were executed.** They ran on macOS (Apple silicon) with Docker via
   Colima, one task at a time. On that network, three local settings were needed. None of them changes the
   task, the prompt or the scorer:

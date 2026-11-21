@@ -29,4 +29,8 @@ agents:
     kwargs:
       version: 2.2.8
       cost_limit: "3.0"   # upstream default; inactive when LiteLLM has no price
+      # No session-ID header: Harbor would otherwise put the trial name (which contains
+      # the bug id) on the mini-swe-agent command line, echoed into /logs/agent/mini-swe-agent.txt,
+      # which the agent can read. Upstream's sandbox exposes no bug id to the agent.
+      session_id_headers: []
       config_file: src/distdebug-bench/configs/harbor_mini_swe_agent.yaml

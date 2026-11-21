@@ -11,14 +11,22 @@ The upstream tools can then be run unchanged on Harbor results:
     python -m distdebug_bench.leakage <out>
 
 Trials of the same bug are numbered run-01, run-02, ... in start-time order.
+Directories whose name starts with "_" (e.g. ``_infra_failures``, ``_excluded``) are skipped.
 
-Usage: python harbor_job_to_distdebug.py <harbor-job-dir | dir-of-jobs> <out-dir>
+``--redact-env NAME`` (repeatable) replaces the value of environment variable NAME with
+``<REDACTED>`` in the copied files, including copies that the terminal line-wrapped.
+Harbor's mini-swe-agent log echoes the API key, and an agent that reads
+``/logs/agent/mini-swe-agent.txt`` copies it into its trajectory.
+
+Usage: python harbor_job_to_distdebug.py <harbor-job-dir | dir-of-jobs> <out-dir> [--redact-env NAME ...]
 """
 
 from __future__ import annotations
 
+import argparse
 import json
-import shutil
+import os
+import re
 import sys
 from pathlib import Path
 
@@ -28,12 +36,35 @@ def bug_of(task_name: str) -> str:
     return task_name.rsplit("/", 1)[-1].split("__", 1)[-1]
 
 
+def secret_patterns(names: list[str]) -> list[re.Pattern[str]]:
+    patterns = []
+    for name in names:
+        value = os.environ.get(name)
+        if not value:
+            sys.exit(f"--redact-env {name}: variable is not set")
+        # Allow a (possibly JSON-escaped) line break between any two characters.
+        patterns.append(re.compile(r"(?:\\\\n|\\n|\n)?".join(map(re.escape, value))))
+    return patterns
+
+
+def copy_redacted(src: Path, dst: Path, patterns: list[re.Pattern[str]]) -> None:
+    text = src.read_text(errors="surrogateescape")
+    for pattern in patterns:
+        text = pattern.sub("<REDACTED>", text)
+    dst.write_text(text, errors="surrogateescape")
+
+
 def main() -> int:
-    job, out = Path(sys.argv[1]), Path(sys.argv[2])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("job", type=Path)
+    ap.add_argument("out", type=Path)
+    ap.add_argument("--redact-env", action="append", default=[])
+    args = ap.parse_args()
+    job, out, patterns = args.job, args.out, secret_patterns(args.redact_env)
     trials = []
     # Works for one job (<job>/<trial>/result.json) or a directory of per-task jobs.
     for result_path in sorted(job.rglob("result.json")):
-        if "_infra_failures" in result_path.parts:
+        if any(part.startswith("_") for part in result_path.relative_to(job).parts):
             continue
         result = json.loads(result_path.read_text())
         if "task_name" not in result:
@@ -48,10 +79,10 @@ def main() -> int:
         run_dir.mkdir(parents=True, exist_ok=True)
         diagnosis = trial_dir / "artifacts" / "workspace" / "diagnosis.json"
         if diagnosis.is_file():
-            shutil.copyfile(diagnosis, run_dir / "diagnosis.json")
+            copy_redacted(diagnosis, run_dir / "diagnosis.json", patterns)
         trace = trial_dir / "agent" / "mini-swe-agent.trajectory.json"
         if trace.is_file():
-            shutil.copyfile(trace, run_dir / "trajectory.json")
+            copy_redacted(trace, run_dir / "trajectory.json", patterns)
         agent = result.get("agent_result") or {}
         stats = {
             "input_tokens": agent.get("n_input_tokens"),

@@ -29,6 +29,7 @@ agents:
 #     kwargs:
 #       version: 2.2.8
 #       cost_limit: "3.0"
+#       session_id_headers: []   # keep the bug id (in the trial name) out of the agent-readable log
 #       config_file: src/distdebug-bench/configs/harbor_mini_swe_agent.yaml
 #
 # Other Harbor agents use instruction.md directly (upstream's Codex/OpenCode prompt):
