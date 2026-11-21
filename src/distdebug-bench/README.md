@@ -196,24 +196,60 @@ images are built, not at generation time.
 
 ## Comparison with Original Benchmark (Parity)
 
-**Status: in progress** (WIP). Runs completed so far: original 2 of 3, Harbor 1 of 3. Values are
-`block_coverage` / `file_coverage` in %, mean over the 12 parity bugs.
+**Status: matched.** 3 runs per side on the 12-bug parity split; all values are % (mean over the 12
+bugs), reported as mean ± sample SEM over runs.
 
 | Agent | Model | Metric | Number of Runs | Dataset Size | Original Benchmark Performance | Harbor Adapter Performance |
 |-------|-------|--------|----------------|--------------|--------------------------------|----------------------------|
-| mini-swe-agent@2.2.8 | step-5-preview | block_coverage | 2 / 1 (of 3) | 12 of 34 (35%) | 57.64 ± 8.33 (runs 49.31, 65.97) | 53.75 (1 run so far) |
-| mini-swe-agent@2.2.8 | step-5-preview | file_coverage | 2 / 1 (of 3) | 12 of 34 (35%) | 74.31 ± 6.25 (runs 68.06, 80.56) | 76.39 (1 run so far) |
+| mini-swe-agent@2.2.8 | step-5-preview | block_coverage | 3 | 12 of 34 (35%) | 60.19 ± 5.44 | 58.52 ± 2.48 |
+| mini-swe-agent@2.2.8 | step-5-preview | file_coverage | 3 | 12 of 34 (35%) | 80.56 ± 7.22 | 75.46 ± 4.04 |
 
-What has already been verified on real runs:
-- On 12 of 12 Harbor trials, the in-container `reward.json` equals upstream's offline rescoring of the
-  same diagnosis (`scripts/harbor_job_to_distdebug.py` → `python -m distdebug_bench.score`).
-- Upstream `distdebug_bench.leakage` flags 0 of 12 traces on either side.
+Per-run scores (block_coverage): original 49.31 / 65.97 / 65.28, Harbor 53.75 / 62.08 / 59.72.
+Per-run scores (file_coverage): original 68.06 / 80.56 / 93.06, Harbor 76.39 / 81.94 / 68.06.
+
+The run-score ranges overlap for every upstream metric, not only the two above:
+
+| Metric | Original | Harbor |
+|---|---|---|
+| function_coverage | 45.83 ± 5.56 | 43.52 ± 6.52 |
+| line_coverage | 52.49 ± 6.61 | 53.05 ± 3.19 |
+| strict_block_coverage | 57.41 ± 5.16 | 53.70 ± 2.45 |
+| block_precision | 51.58 ± 1.38 | 49.10 ± 1.31 |
+| mention_coverage | 72.59 ± 1.77 | 74.72 ± 2.74 |
+
+Checks on the parity runs:
+- On 36 of 36 Harbor trials, the in-container `reward.json` equals upstream's offline rescoring of the
+  same diagnosis (`scripts/harbor_job_to_distdebug.py` → upstream `score_run`).
+- Upstream `distdebug_bench.leakage` flags 0 of 36 traces on either side. One earlier Harbor trial
+  (run 2, elasticsearch-128583) had been flagged; it was caused by Harbor's session-ID header, was
+  excluded and rerun after the fix (see Notes & Caveats).
 - No missing or schema-invalid diagnoses on either side.
 - The system and instance messages in the saved trajectories are byte-identical between the two sides,
   except Mini-SWE-Agent's `<system_information>` line. That line is `uname` output: an x86_64 Linux host
   for the original side and an aarch64 Linux VM for the Harbor side.
+- Per-bug variance is large for this model, and it goes both ways. For example, hbase-28376 scores
+  1.0 / 1.0 / 1.0 on the original side and 0.0 / 1.0 / 0.0 on Harbor, while kafka-13407 scores
+  0.0 / 0.0 / 0.0 on the original side and 0.0 / 0.0 / 1.0 on Harbor. The low-scoring trajectories
+  show normal completions that localize a different component, not environment failures.
 
-**Proposed plan.**
+Per-bug block_coverage (runs 1 / 2 / 3):
+
+| Bug | Original | Harbor |
+|---|---|---|
+| elasticsearch-128583 | 1.0 / 1.0 / 1.0 | 1.0 / 1.0 / 1.0 |
+| etcd-17507 | 1.0 / 1.0 / 1.0 | 1.0 / 1.0 / 1.0 |
+| hbase-28376 | 1.0 / 1.0 / 1.0 | 0.0 / 1.0 / 0.0 |
+| hdfs-10512 | 0.67 / 0.67 / 0.67 | 0.67 / 0.67 / 0.67 |
+| ignite-6860 | 0.0 / 0.0 / 0.0 | 0.2 / 0.2 / 0.0 |
+| ignite3-21827 | 0.5 / 0.5 / 0.5 | 0.5 / 0.5 / 0.5 |
+| kafka-13407 | 0.0 / 0.0 / 0.0 | 0.0 / 0.0 / 1.0 |
+| kafka-13668 | 0.25 / 0.25 / 0.5 | 0.25 / 0.25 / 0.5 |
+| kubernetes-135981 | 0.5 / 0.5 / 0.5 | 0.5 / 0.5 / 0.5 |
+| ray-14264 | 0.0 / 1.0 / 0.67 | 0.33 / 0.33 / 1.0 |
+| tikv-18458 | 1.0 / 1.0 / 1.0 | 1.0 / 1.0 / 1.0 |
+| zookeeper-2581 | 0.0 / 1.0 / 1.0 | 1.0 / 1.0 / 0.0 |
+
+**Protocol.**
 - **Agent:** Mini-SWE-Agent 2.2.8, the harness behind the paper's main table. Harbor has a built-in
   `mini-swe-agent`, so no custom agent is needed (scenario 1).
 - **Model:** StepFun `step-5-preview` through the Step Plan OpenAI-compatible endpoint
