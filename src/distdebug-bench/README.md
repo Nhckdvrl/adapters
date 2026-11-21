@@ -271,6 +271,11 @@ python src/distdebug-bench/scripts/parity_compare.py --upstream /path/to/distdeb
     (`scripts/harbor_job_to_distdebug.py`; Mini-SWE-Agent traces are supported directly). Some issue
     descriptions mention *other* issue keys (for example ZOOKEEPER-2678 in zookeeper-2845). That is
     upstream content and is unchanged.
+- **Module-relative label paths.** Some HDFS and Ignite/Ignite 3 labels omit the leading module
+  directory (e.g. `hadoop-hdfs/src/...` for `hadoop-hdfs-project/hadoop-hdfs/src/...`). Upstream's
+  scorer matches a path that contains the other, so repository-relative answers still match. We checked
+  that every labeled file of the 34 tasks resolves to exactly one file at its pinned commit, with line
+  ranges inside the file.
 - **Labels with empty ranges.** `ray-25699` has one labeled block with `start_line == end_line`. Under the
   half-open line ranges of the upstream scorer it covers no lines, so even the oracle gets
   `strict_block_coverage = 0.5` there (`block_coverage` = 1.0).
