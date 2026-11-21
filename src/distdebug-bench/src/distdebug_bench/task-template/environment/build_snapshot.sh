@@ -8,7 +8,8 @@ url="$1"; commit="$2"; dest="$3"
 git init -q "$dest"
 cd "$dest"
 n=0
-until git fetch -q --no-tags "$url" "$commit"; do
+# Abort (and retry) a transfer that stalls below 1 KB/s for 60 s instead of hanging the build.
+until git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 fetch -q --no-tags "$url" "$commit"; do
   n=$((n + 1)); [ "$n" -ge 4 ] && { echo "fetch failed: $url $commit" >&2; exit 1; }
   sleep $((n * 15))
 done
