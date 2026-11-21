@@ -9,7 +9,9 @@
     "number_of_runs": 3,
     "notes": "IN PROGRESS (WIP): original side has 2 of 3 runs, Harbor side 1 of 3; runs 3 (original) and 2-3 (Harbor) are running. Protocol on both sides: one attempt per bug per run, missing/schema-invalid diagnosis scores 0 (none occurred so far), both sides rescored offline with the same upstream distdebug_bench.score.score_run (Harbor in-container rewards matched the upstream rescoring on 12/12 trials). Upstream leakage check: 0 flagged on both sides. Prompts verified byte-identical on real trajectories except mini-swe-agent's <system_information> line (original: x86_64 Linux host with bubblewrap; Harbor: aarch64 Linux VM via Colima). Values are percentages (mean over 12 bugs).",
     "original_parity_repo": "https://github.com/OrderLab/distdebug-bench/tree/c3e929b9ee0082345337358e352ae37fc472df4c (plus configs/original/mini-swe-agent-step-5-preview.yaml from this adapter)",
-    "adapter_pr": [],
+    "adapter_pr": [
+      "https://github.com/harbor-index/adapters/pull/32"
+    ],
     "dataset_pr": [],
     "parity_pr": [],
     "metrics": [
