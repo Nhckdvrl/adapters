@@ -274,10 +274,12 @@ python src/distdebug-bench/scripts/parity_compare.py --upstream /path/to/distdeb
 - **Labels with empty ranges.** `ray-25699` has one labeled block with `start_line == end_line`. Under the
   half-open line ranges of the upstream scorer it covers no lines, so even the oracle gets
   `strict_block_coverage = 0.5` there (`block_coverage` = 1.0).
-- **Large images.** Each image contains the full ancestor history of its system. Measured sizes
-  (`.git` + worktree): Elasticsearch about 1.4–1.6 GB, Kubernetes and Ray largest after that, HBase/HDFS/Ignite
-  0.25–0.45 GB, Kafka/etcd/TiKV/ZooKeeper 40–250 MB. Builds clone from GitHub. Elasticsearch takes about
-  70–90 s on a fast link, and `build_timeout_sec` is 3600 for large systems.
+- **Image sizes.** Each image contains the full ancestor history of its system. Measured snapshot sizes
+  (`.git` + worktree): Elasticsearch 1.4–1.6 GB and Kubernetes 1.5 GB. Every other Lite bug is at most
+  0.45 GB (HBase, HDFS, Ignite and Ray are 0.1–0.45 GB; Kafka, etcd, TiKV, Ignite 3 and ZooKeeper are
+  40–250 MB). All 34 together come to about 15 GB on top of the shared `ubuntu:24.04` layer. Builds fetch
+  from GitHub; the largest fetch takes 65–90 s on a fast link, and `build_timeout_sec` is 3600 for
+  Elasticsearch/Kubernetes and 1800 for the rest.
 - **Full split.** `--split full` is implemented (all 120 snapshots are pinned) but its oracle runs have not
   been validated yet.
 - **Windows hosts.** The tasks are Linux containers. With Docker Desktop (WSL2 backend) they run as usual.

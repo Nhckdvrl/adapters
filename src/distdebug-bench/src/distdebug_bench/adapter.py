@@ -67,8 +67,9 @@ DEFAULT_ALLOWED_HOSTS = (
     "api.deepseek.com",
 )
 
-# Systems whose full-history snapshot is large (packed .git + worktree, GB).
-LARGE_SYSTEMS = {"elasticsearch", "kubernetes", "ray", "hdfs", "hbase", "ignite"}
+# Systems whose full-history snapshot is large (~1.4-1.6 GB of .git + worktree;
+# every other Lite snapshot is <= 0.45 GB).
+LARGE_SYSTEMS = {"elasticsearch", "kubernetes"}
 
 TEMPLATE_DIR = Path(__file__).parent / "task-template"
 SNAPSHOTS_FILE = Path(__file__).parent / "snapshots.json"

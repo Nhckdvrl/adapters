@@ -22,8 +22,11 @@ agents:
     model_name: openai/step-5-preview
     base_url: https://api.stepfun.com/step_plan/v1
     model_api_key_name: STEPFUN_API_KEY
+    # Needed so Harbor accepts base_url together with config_file.
+    model_api_format: openai_chat_completions
     # Upstream Mini-SWE-Agent runs have no wall-clock limit; keep Harbor's generous.
     override_timeout_sec: 7200
     kwargs:
       version: 2.2.8
+      cost_limit: "3.0"   # upstream default; inactive when LiteLLM has no price
       config_file: src/distdebug-bench/configs/harbor_mini_swe_agent.yaml
