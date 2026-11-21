@@ -12,7 +12,7 @@ The upstream tools can then be run unchanged on Harbor results:
 
 Trials of the same bug are numbered run-01, run-02, ... in start-time order.
 
-Usage: python harbor_job_to_distdebug.py <harbor-job-dir> <out-dir>
+Usage: python harbor_job_to_distdebug.py <harbor-job-dir | dir-of-jobs> <out-dir>
 """
 
 from __future__ import annotations
@@ -31,7 +31,10 @@ def bug_of(task_name: str) -> str:
 def main() -> int:
     job, out = Path(sys.argv[1]), Path(sys.argv[2])
     trials = []
-    for result_path in job.glob("*/result.json"):
+    # Works for one job (<job>/<trial>/result.json) or a directory of per-task jobs.
+    for result_path in sorted(job.rglob("result.json")):
+        if "_infra_failures" in result_path.parts:
+            continue
         result = json.loads(result_path.read_text())
         if "task_name" not in result:
             continue  # job-level result.json

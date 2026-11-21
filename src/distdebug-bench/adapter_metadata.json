@@ -1,7 +1,7 @@
 [
   {
     "adapter_name": "distdebug-bench",
-    "adapter_builders": ["Xiang Ding (GitHub: Nhckdvrl)"],
+    "adapter_builders": ["Xiang Ding (nhckdvrl@gmail.com)"],
     "original_benchmark": [
       {
         "split": "lite",
@@ -30,7 +30,7 @@
         "added_agents": ["None"],
         "parity_matching_agents": [],
         "parity_unmatching_agents": ["None"],
-        "parity_costs": null,
+        "parity_costs": "$0",
         "notes": "Parity in progress (mini-swe-agent@2.2.8 + step-5-preview via StepFun Step Plan; 12-bug parity split = 10% of the 120-bug benchmark). Reward = block_coverage; all upstream metrics are also reported in reward.json."
       }
     ]
