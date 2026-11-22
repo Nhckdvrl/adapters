@@ -209,7 +209,9 @@ Links: original benchmark [OrderLab/distdebug-bench@c3e929b](https://github.com/
 (original side run unmodified, plus `configs/original/mini-swe-agent-step-5-preview.yaml`; no fork needed) ·
 adapter PR [harbor-index/adapters#32](https://github.com/harbor-index/adapters/pull/32) ·
 dataset PR [harbor-framework/harbor-datasets#288](https://github.com/harbor-framework/harbor-datasets/pull/288) ·
-parity artifacts: HuggingFace `harborframework/parity-experiments` (PR link to be added).
+parity artifacts: [harborframework/parity-experiments#294](https://huggingface.co/datasets/harborframework/parity-experiments/discussions/294)
+(that repo is over the Hub's 1M-file limit, so the files are mirrored at
+[Nhckdvrl/distdebug-bench-parity-experiments](https://huggingface.co/datasets/Nhckdvrl/distdebug-bench-parity-experiments)).
 
 Per-run scores (block_coverage): original 49.31 / 65.97 / 65.28, Harbor 53.75 / 62.08 / 59.72.
 Per-run scores (file_coverage): original 68.06 / 80.56 / 93.06, Harbor 76.39 / 81.94 / 68.06.
