@@ -205,6 +205,12 @@ bugs), reported as mean ± sample SEM over runs.
 | mini-swe-agent@2.2.8 | step-5-preview | block_coverage | 3 | 12 of 34 (35%) | 60.19 ± 5.44 | 58.52 ± 2.48 |
 | mini-swe-agent@2.2.8 | step-5-preview | file_coverage | 3 | 12 of 34 (35%) | 80.56 ± 7.22 | 75.46 ± 4.04 |
 
+Links: original benchmark [OrderLab/distdebug-bench@c3e929b](https://github.com/OrderLab/distdebug-bench/tree/c3e929b9ee0082345337358e352ae37fc472df4c)
+(original side run unmodified, plus `configs/original/mini-swe-agent-step-5-preview.yaml`; no fork needed) ·
+adapter PR [harbor-index/adapters#32](https://github.com/harbor-index/adapters/pull/32) ·
+dataset PR [harbor-framework/harbor-datasets#288](https://github.com/harbor-framework/harbor-datasets/pull/288) ·
+parity artifacts: HuggingFace `harborframework/parity-experiments` (PR link to be added).
+
 Per-run scores (block_coverage): original 49.31 / 65.97 / 65.28, Harbor 53.75 / 62.08 / 59.72.
 Per-run scores (file_coverage): original 68.06 / 80.56 / 93.06, Harbor 76.39 / 81.94 / 68.06.
 
