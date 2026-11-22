@@ -7,7 +7,7 @@ goes through `distdebug_bench.score.score_run`, the same function the upstream
 as in the original benchmark.
 
 Upstream counts only schema-valid diagnoses as attempts (the runner retries the
-rest). A single Harbor trial cannot be retried, so a missing, unparsable or
+rest). A single trial cannot be retried, so a missing, unparsable or
 schema-invalid diagnosis.json scores 0 on every metric with valid_diagnosis = 0;
 filter on that key to reproduce the upstream "valid attempts only" protocol.
 """
@@ -27,7 +27,7 @@ from distdebug_bench.benchmark import get_bug  # noqa: E402
 from distdebug_bench.score import score_run  # noqa: E402
 from distdebug_bench.validate_diagnosis import validate_diagnosis_payload  # noqa: E402
 
-# Harbor's reward is the paper's main metric; every upstream metric is reported too.
+# The reward is the paper's main metric; every upstream metric is reported too.
 PRIMARY = "block_coverage"
 METRICS = (
     "block_coverage",
