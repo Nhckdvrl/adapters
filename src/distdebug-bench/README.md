@@ -9,7 +9,7 @@ not write a fix. The diagnosis is scored against human-labeled root-cause blocks
 
 - **Tasks:** 34, the official **Lite** split (`benchmark/lite.txt`), across 11 systems (Elasticsearch,
   etcd, HBase, HDFS, Ignite, Ignite 3, Kafka, Kubernetes, Ray, TiKV, ZooKeeper). No task is excluded.
-  `--split full` generates all 120 bugs.
+  `--split full` generates all 120 bugs (oracle 120/120).
 - **Source:** upstream commit [`c3e929b`](https://github.com/OrderLab/distdebug-bench/tree/c3e929b9ee0082345337358e352ae37fc472df4c) (v1.1 labels).
 - **Reward:** `block_coverage`, the paper's main metric. The other upstream metrics are in `reward.json`.
 
@@ -230,10 +230,13 @@ python src/distdebug-bench/scripts/parity_compare.py --upstream /path/to/distdeb
 
 ## Notes & Caveats
 
-- **Oracle.** Lite: 34/34 at reward 1.0, 0 exceptions, with the final adapter on local Docker. NOP scores
-  0 with `valid_diagnosis = 0`. All metrics are 1.0 except `strict_block_coverage` = 0.5 on `ray-25699`:
-  one of its labels has `start_line == end_line`, which covers no lines under the scorer's half-open
-  ranges. That is upstream's definition and is left as is.
+- **Oracle.** With the final adapter on local Docker: Lite 34/34 and the full split 120/120 at reward 1.0,
+  0 exceptions (two Elasticsearch images failed their first build on a network fetch and passed on rebuild).
+  NOP scores 0 with `valid_diagnosis = 0`. Some secondary metrics stay below 1.0 for the oracle, by
+  upstream's definitions: 9 bugs (Lite: `ray-25699`; full: also `elasticsearch-105065` and 7 Ray bugs) have a
+  label with `start_line == end_line`, which covers no lines under the scorer's half-open ranges, and on
+  `tikv-18756` the label `RangeLatch::acquire` has a generic method name, so `mention_coverage` looks for
+  `rangelatch.acquire`, which Rust-style `::` text does not contain. These are left as is.
 - **Sandbox.** Upstream runs agent commands in bubblewrap with no network. Here the agent runs in the
   task container, and only LLM API hosts are reachable. Issue trackers, GitHub and the benchmark site
   are not. The image has `git`, `python3`, `ripgrep`, `less`, `file` and `procps`, but no compilers or JDKs

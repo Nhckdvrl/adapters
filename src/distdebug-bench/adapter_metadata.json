@@ -27,7 +27,7 @@
           "opencode@1.4.6"
         ],
         "adaptable": true,
-        "notes": "Generation is implemented (--split full, all 120 snapshots pinned) but not yet validated; the registry dataset targets Lite."
+        "notes": "Generation is implemented (--split full, all 120 snapshots pinned); oracle 120/120 at reward 1.0 on local Docker. The registry dataset targets Lite."
       }
     ],
     "harbor_adapter": [
